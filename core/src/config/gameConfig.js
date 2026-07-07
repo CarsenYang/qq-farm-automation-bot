@@ -192,7 +192,7 @@ function resolveMutationInfo(plantId, mutantConfigIds) {
     } else if (plantName.includes("塔")) {
         selfType = "塔塔";
         selfQuality = "天工";
-    } else if (plantName.includes("荷")) {
+    } else if (plantName === "荷花") {
         selfType = "荷华";
         selfQuality = determineMutationQuality(selfType, plant ? Number(plant.exp) || 0 : 0);
     }

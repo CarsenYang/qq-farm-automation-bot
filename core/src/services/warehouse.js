@@ -4,12 +4,29 @@
  */
 
 const protobuf = require('protobufjs');
-const { getFruitName, getPlantByFruitId, getPlantBySeedId, getItemById, getItemImageById, getSeedImageBySeedId, getAllMutantTypes, resolveMutationInfo } = require('../config/gameConfig');
+const { getFruitName, getPlantByFruitId, getPlantBySeedId, getItemById, getItemImageById, getSeedImageBySeedId, getAllMutantTypes, getMutationTypeByFruitId } = require('../config/gameConfig');
 const { isAutomationOn } = require('../models/store');
 const { sendMsgAsync, networkEvents, getUserState } = require('../utils/network');
 const { types } = require('../utils/proto');
 const { toLong, toNum, log, logWarn, sleep } = require('../utils/utils');
 const { updateStatusGold } = require('./status');
+
+
+// QQ 服务端变异类型枚举值 → 名称映射
+// QQ 枚举顺序：基础效果(冰冻/爱心/暗化/湿润)在前，品质变异(月华/塔塔/荷华/黄金)在后
+const QQ_MUTANT_ENUM_MAP = Object.freeze({
+    1: "冰冻",
+    2: "爱心",
+    3: "暗化",
+    4: "湿润",
+    5: "黄金_天工",
+    6: "黄金_珍品",
+    7: "黄金_稀有",
+    8: "荷华_珍品",
+    9: "荷华_稀有",
+    10: "月华",
+    11: "塔塔",
+});
 
 const SELL_BATCH_SIZE = 15;
 const FERTILIZER_RELATED_IDS = new Set([
@@ -336,21 +353,24 @@ function getItemMutantTypes(item, id) {
                 const mtNames = Object.keys(allMuts);
                 for (let mi = 0; mi < item.mutant_types.length; mi++) {
                     const mtv = Number(item.mutant_types[mi]);
-                    if (mtv > 0 && mtNames.length > 0) {
-                        const nameIdx = Math.min(mtv - 1, mtNames.length - 1);
-                        itemMutantTypes.push(mtNames[nameIdx]);
-                    } else if (mtv > 0) {
-                        itemMutantTypes.push('mutant_' + mtv);
+                    if (mtv > 0) {
+                        var mapped = QQ_MUTANT_ENUM_MAP[mtv];
+                        if (mapped) { mapped = mapped.replace(/_(天工|珍品|稀有)$/, ""); }
+                        if (mapped) {
+                            itemMutantTypes.push(mapped);
+                        } else {
+                            itemMutantTypes.push('mutant_' + mtv);
+                        }
                     }
                 }
             }
         } catch (e) {}
     }
-    if (itemMutantTypes.length === 0 && getPlantByFruitId(id)) {
+    if (itemMutantTypes.length === 0) {
         try {
-            const fm = resolveMutationInfo ? resolveMutationInfo(Number(id) || 0, []) : null;
-            if (fm && fm.isMutant && fm.mutationType) {
-                itemMutantTypes.push(fm.mutationType);
+            const fm = getMutationTypeByFruitId ? getMutationTypeByFruitId(Number(id) || 0) : null;
+            if (fm && fm.type) {
+                itemMutantTypes.push(fm.type);
             }
         } catch (e) {}
     }
@@ -501,11 +521,12 @@ async function sellAllFruits() {
                         var mtNames = Object.keys(mtMap);
                         for (var smi = 0; smi < item.mutant_types.length; smi++) {
                             var smId = Number(item.mutant_types[smi]);
-                            if (smId > 0 && smId <= mtNames.length) {
-                                var cfg = mtMap[mtNames[smId - 1]];
+                            if (smId > 0) {
+                                var mtName = QQ_MUTANT_ENUM_MAP[smId];
+                                if (mtName) { var cfg = mtMap[mtName];
                                 if (cfg && (cfg.quality === '天工' || cfg.quality === '珍品' || cfg.quality === '稀有')) {
                                     hasQualityMutant = true;
-                                    log('仓库', `跳过变异物品: ${getFruitName(id)} x${count} (${mtNames[smId - 1]})`, {
+                                    log('仓库', `跳过变异物品: ${getFruitName(id)} x${count} (${mtName})`, {
                                         module: 'warehouse',
                                         event: 'skip_mutant_item',
                                         result: 'kept',
@@ -513,7 +534,7 @@ async function sellAllFruits() {
                                         count: count,
                                     });
                                     break;
-                                }
+                            }                                }
                             }
                         }
                     }
