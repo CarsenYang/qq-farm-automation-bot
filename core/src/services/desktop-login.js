@@ -354,6 +354,14 @@ function findQQUserDataDir() {
             }
             await waitMs(500);
         }
+        // 超时后回退：寻找任意 QQ 主进程（不依赖 --user-data-dir 匹配）
+        var rows = await getQQProcessTreeSnapshot();
+        var fallback = rows.find(function(row) { return isQQMainProcessRow(row); });
+        if (fallback) {
+            await waitMs(1000);
+            var stableFallback = (await getQQProcessTreeSnapshot()).find(function(row) { return isQQMainProcessRow(row); });
+            if (stableFallback && stableFallback.pid === fallback.pid) return fallback.pid;
+        }
         return 0;
     }
 
@@ -738,4 +746,3 @@ module.exports = {
         findQQMainPidByUserDataDir: findQQMainPidByUserDataDir,
     },
 };
-

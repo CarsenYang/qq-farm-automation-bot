@@ -1,4 +1,4 @@
-ï»¿import { defineStore } from 'pinia'
+import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api'
 
@@ -52,23 +52,23 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
 
   async function fetchQR() {
     qrStatus.value = 'loading'
-    qrMessage.value = 'æ­£åœ¨ç”ŸæˆäºŒç»´ç ...'
+    qrMessage.value = 'ÕýÔÚÉú³É¶þÎ¬Âë...'
     try {
       const res = await api.post('/api/desktop-login/qrcode', { preset: 'vip' })
       if (res.data.ok) {
         qrsig.value = res.data.data.qrsig
         qrcode.value = res.data.data.qrcode
         qrStatus.value = 'ready'
-        qrMessage.value = 'è¯·ä½¿ç”¨æ‰‹æœº QQ æ‰«ç ç™»å½•'
+        qrMessage.value = 'ÇëÊ¹ÓÃÊÖ»ú QQ É¨ÂëµÇÂ¼'
         return true
       } else {
         qrStatus.value = 'error'
-        qrMessage.value = res.data.error || 'èŽ·å–äºŒç»´ç å¤±è´¥'
+        qrMessage.value = res.data.error || '»ñÈ¡¶þÎ¬ÂëÊ§°Ü'
         return false
       }
     } catch (e: any) {
       qrStatus.value = 'error'
-      qrMessage.value = 'è¯·æ±‚å¤±è´¥: ' + (e.response?.data?.error || e.message)
+      qrMessage.value = 'ÇëÇóÊ§°Ü: ' + (e.response?.data?.error || e.message)
       return false
     }
   }
@@ -82,7 +82,7 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
         const data = res.data.data
         if (data.status === 'OK') {
           qrStatus.value = 'success'
-          qrMessage.value = 'æ‰«ç æˆåŠŸï¼'
+          qrMessage.value = 'É¨Âë³É¹¦£¡'
           loggedUin.value = data.uin || ''
           loggedNickname.value = data.nickname || ''
           loggedCookies.value = JSON.stringify(data.cookies || {})
@@ -90,19 +90,19 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
           return { done: true, uin: data.uin, nickname: data.nickname, cookies: data.cookies }
         } else if (data.status === 'Wait') {
           qrStatus.value = 'waiting'
-          qrMessage.value = data.msg || 'ç­‰å¾…æ‰«ç ...'
+          qrMessage.value = data.msg || 'µÈ´ýÉ¨Âë...'
           polling.value = false
           return { done: false }
         } else {
           qrStatus.value = 'error'
-          qrMessage.value = data.msg || 'ç™»å½•å¤±è´¥'
+          qrMessage.value = data.msg || 'µÇÂ¼Ê§°Ü'
           polling.value = false
           return { done: false, error: data.msg }
         }
       }
     } catch (e: any) {
       qrStatus.value = 'error'
-      qrMessage.value = 'æ£€æŸ¥å¤±è´¥: ' + (e.response?.data?.error || e.message)
+      qrMessage.value = '¼ì²éÊ§°Ü: ' + (e.response?.data?.error || e.message)
     }
     polling.value = false
     return { done: false }
@@ -112,17 +112,17 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
     launching.value = true
     launchResult.value = ''
     try {
-      const res = await api.post('/api/desktop-login/launch', { uin, cookies, nickname, autoLogin, qqPath })
+      const res = await api.post('/api/desktop-login/launch', { uin, cookies, nickname, autoLogin, qqPath }, { timeout: 60000 })
       if (res.data.ok) {
-        launchResult.value = 'QQ å·²å¯åŠ¨ (PID: ' + res.data.data.pid + ')'
+        launchResult.value = 'QQ ÒÑÆô¶¯ (PID: ' + res.data.data.pid + ')'
         await fetchSessions()
         return true
       } else {
-        launchResult.value = res.data.error || 'å¯åŠ¨å¤±è´¥'
+        launchResult.value = res.data.error || 'Æô¶¯Ê§°Ü'
         return false
       }
     } catch (e: any) {
-      launchResult.value = 'å¯åŠ¨å¤±è´¥: ' + (e.response?.data?.error || e.message)
+      launchResult.value = 'Æô¶¯Ê§°Ü: ' + (e.response?.data?.error || e.message)
       return false
     } finally {
       launching.value = false
@@ -134,7 +134,7 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
       await api.post('/api/desktop-login/stop', { uin })
       await fetchSessions()
     } catch (e: any) {
-      console.error('åœæ­¢ QQ å¤±è´¥', e)
+      console.error('Í£Ö¹ QQ Ê§°Ü', e)
     }
   }
 
@@ -146,7 +146,7 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
         sessions.value = res.data.data.sessions || []
       }
     } catch (e) {
-      console.error('èŽ·å– sessions å¤±è´¥', e)
+      console.error('»ñÈ¡ sessions Ê§°Ü', e)
     } finally {
       loadingSessions.value = false
     }
@@ -157,7 +157,7 @@ export const useDesktopLoginStore = defineStore('desktop-login', () => {
       await api.delete('/api/desktop-login/sessions', { data: { uin } })
       await fetchSessions()
     } catch (e: any) {
-      console.error('åˆ é™¤ session å¤±è´¥', e)
+      console.error('É¾³ý session Ê§°Ü', e)
     }
   }
 
