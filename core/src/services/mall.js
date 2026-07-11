@@ -1,4 +1,4 @@
-const { Buffer } = require('node:buffer');
+﻿const { Buffer } = require('node:buffer');
 /**
  * 商城自动购买
  */
@@ -15,6 +15,12 @@ const CHECK_BUY_COOLDOWN_MS = 60 * 1000;
 const MAX_ROUNDS = 100;
 const BUY_PER_ROUND = 10;
 const FREE_GIFTS_DAILY_KEY = 'mall_free_gifts';
+
+// 商店商品 → 购买货币映射表 (item_id → price_id)
+// 缺省为金币(1001)，此处仅列出使用其他货币的商品
+const SHOP_ITEM_CURRENCY = {
+    90011: 1005,   // 柯基 → 金豆豆
+};
 
 let lastBuyAt = 0;
 let lastCheckBuyAt = 0;
@@ -368,6 +374,11 @@ function normalizeShopGoods(goods, shopId) {
     const item = normalizeMallItem({ id: itemId, count: Number(goods && goods.item_count) || 1 });
     const limitCount = toNonNegativeInt(goods && goods.limit_count);
     const boughtNum = toNonNegativeInt(goods && goods.bought_num);
+    const rawPrice = Number(goods && goods.price) || 0;
+    const isFree = rawPrice <= 0;
+    const currencyMap = { 1005: { priceKey: 1005, priceUnit: '金豆豆', balanceKey: 'goldBean' }, 1002: { priceKey: 1002, priceUnit: '点券', balanceKey: 'coupon' }, 1004: { priceKey: 1004, priceUnit: '钻石', balanceKey: 'diamond' } };
+    const pid = (goods && goods.price_id > 0) ? Number(goods.price_id) : (SHOP_ITEM_CURRENCY[itemId] || 1001);
+    const cur = currencyMap[pid] || { priceKey: 1001, priceUnit: '金币', balanceKey: 'gold' };
     return {
         goodsId: Number(goods && goods.id) || 0,
         source: 'shop',
@@ -376,12 +387,12 @@ function normalizeShopGoods(goods, shopId) {
         slotType: 0,
         name: item.name,
         type: 0,
-        isFree: Number(goods && goods.price) <= 0,
+        isFree,
         isLimited: limitCount > 0,
         discount: '',
-        price: Number(goods && goods.price) <= 0
+        price: isFree
             ? { itemId: 0, amount: 0, unit: '免费', balanceKey: '' }
-            : { itemId: 1001, amount: Math.max(0, Number(goods && goods.price) || 0), unit: '金币', balanceKey: 'gold' },
+            : { itemId: cur.priceKey, amount: rawPrice, unit: cur.priceUnit, balanceKey: cur.balanceKey },
         items: [item],
         image: item.image,
         description: item.description,
@@ -885,3 +896,4 @@ module.exports = {
         lastClaimAt: freeGiftLastAt,
     }),
 };
+

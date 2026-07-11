@@ -1,4 +1,4 @@
-const EventEmitter = require('node:events');
+﻿const EventEmitter = require('node:events');
 const { createModuleLogger } = require('../services/logger');
 const { getTodayKey, loadPersistedStats } = require('../services/stats');
 
@@ -42,6 +42,7 @@ function createRuntimeState(options) {
         return {
             keepRunningOnKickout: !!(account && account.keepRunningOnKickout),
             automation: store.getAutomation(accountId),
+            plantSeedExclude: store.getPlantSeedExclude(accountId),
             plantingStrategy: store.getPlantingStrategy(accountId),
             preferredSeedId: store.getPreferredSeed(accountId),
             intervals: store.getIntervals(accountId),

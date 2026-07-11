@@ -23,6 +23,7 @@ message GoodsInfo {
     int64 item_id = 6;         // 物品ID (即种子ID)
     int64 item_count = 7;      // 每次购买获得数量
     repeated Cond conds = 8;   // 解锁条件
+    int64 price_id = 9;        // 货币ID (1001=金币, 1005=金豆豆, 1002=点券, 1004=钻石)
 }
 
 // ============ 解锁条件 ============
