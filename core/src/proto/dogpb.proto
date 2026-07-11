@@ -1,0 +1,122 @@
+﻿syntax = "proto3";
+
+package gamepb.dogpb;
+
+// ============ 狗类型信息 ============
+message DogTypeInfo {
+    int32 dog_type_id = 1;       // 狗类型ID (90001-)
+    string name = 2;             // 狗名称
+    int32 grow_up_time = 3;      // 成长时间(秒)
+    int32 field_4 = 4;           // 通常=1
+    int32 quality_level = 5;     // 品质等级(100=普通)
+    int32 field_7 = 7;           // 某些狗有=1
+}
+
+// ============ 狗粮信息 ============
+message DogFoodInfo {
+    int32 food_id = 1;           // 物品ID (90004/90005/90006)
+    int32 duration_sec = 2;      // 持续时间(86400/259200/432000)
+    int32 count = 3;             // 已喂数量
+}
+
+// ============ 狗信息 ============
+message DogInfo {
+    repeated DogTypeInfo dog_types = 1;      // 所有可用狗类型配置
+    int32 dog_type_id = 2;                   // 玩家的狗类型ID
+    int32 food_remain_sec = 3;               // 狗粮剩余秒数
+    int32 food_total_cap = 4;                // 狗粮总容量上限(2592000=30天)
+    repeated DogFoodInfo food_items = 5;     // 已喂食的狗粮列表
+}
+
+// ============ GetPetList (获取宠物列表) ============
+message GetPetListRequest {}
+message GetPetListReply {
+    repeated DogTypeInfo dog_types = 1;
+    int64 dog_type_id = 2;
+    int64 food_remain_sec = 3;
+    int64 food_total_cap = 4;
+    repeated DogFoodInfo food_items = 5;
+}
+
+// ============ DeployDog (上阵) ============
+message DeployDogRequest {
+    int64 dog_type_id = 1;
+}
+message DeployDogReply {
+    int64 dog_type_id = 1;
+}
+
+// ============ RecallDog (收起) ============
+message RecallDogRequest {}
+message RecallDogReply {}
+
+// ============ FeedDog (喂食) ============
+message FeedDogRequest {
+    int32 food_id = 1;
+    int32 count = 2;
+}
+message FeedDogReply {}
+
+// ============ GetDogFoodList ============
+message GetDogFoodListRequest {}
+message DogFoodListInfo {
+    int64 food_type_id = 1;
+    string name = 2;
+    int64 duration_sec = 3;
+    int64 count = 4;
+}
+message GetDogFoodListReply {
+    repeated DogFoodListInfo foods = 1;
+}
+
+// ============ Guard Logs (守护日志) ============
+message GuardLogEntry {
+    int64 friend_gid = 1;
+    string friend_name = 2;
+    string friend_avatar = 3;
+    string dog_name = 4;
+    int64 bite_count = 5;
+    int64 gold_intercepted = 6;
+    int64 timestamp = 7;
+    bool success = 8;
+}
+
+message GetGuardLogsRequest {
+    int64 page = 1;
+    int64 page_size = 2;
+}
+message GetGuardLogsReply {
+    repeated GuardLogEntry items = 1;
+    int64 total = 2;
+}
+
+// ============ Guard Reward (护主奖励) ============
+message GetGuardRewardRequest {}
+message GetGuardRewardReply {
+    bool has_huzhu_dog = 1;
+    bool can_claim = 2;
+    repeated corepb.Item rewards = 3;
+}
+
+message ClaimGuardRewardRequest {}
+message ClaimGuardRewardReply {
+    repeated corepb.Item items = 1;
+    repeated corepb.Item bonus_items = 4;
+}
+
+// ============ Capital Mode (资本模式) ============
+message CapitalModeConfig {
+    bool enabled = 1;
+    int64 seconds_before_mature = 2;
+    int64 selected_dog_id = 3;
+}
+
+message GetCapitalModeRequest {}
+message GetCapitalModeReply {
+    CapitalModeConfig config = 1;
+}
+
+message SetCapitalModeRequest {
+    CapitalModeConfig config = 1;
+}
+message SetCapitalModeReply {}

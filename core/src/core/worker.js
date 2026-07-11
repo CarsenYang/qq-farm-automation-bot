@@ -28,13 +28,13 @@ const { initStatusBar, setStatusPlatform, statusData } = require('../services/st
 const { setRecordGoldExpHook } = require('../services/status');
 const { cleanupTaskSystem, checkAndClaimTasks, getTaskClaimDailyState, getTaskDailyStateLikeApp, getGrowthTaskStateLikeApp } = require('../services/task');
 const { sellAllFruits, getBag, getBagItems, openFertilizerGiftPacksSilently } = require('../services/warehouse');
-const { connect, reconnect, cleanup, getWs, getUserState, networkEvents } = require('../utils/network');
-const { loadProto } = require('../utils/proto');
-const { setLogHook, log, toNum } = require('../utils/utils');
-
 if (parentPort && workerData && workerData.accountId && !process.env.FARM_ACCOUNT_ID) {
     process.env.FARM_ACCOUNT_ID = String(workerData.accountId);
 }
+const { getPetShopItems, buyPetShopGoods, feedDog, changeDoghouse, getDogStatus, getPetBagInfo, getDogFoodList, getPetList, deployDog, recallDog, getGuardLogs, getGuardReward, claimGuardReward, getCapitalMode, setCapitalMode, getIllustratedList, claimAllIllustratedRewards } = require('../services/pet');
+const { connect, reconnect, cleanup, getWs, getUserState, networkEvents } = require('../utils/network');
+const { loadProto } = require('../utils/proto');
+const { setLogHook, log, toNum } = require('../utils/utils');
 
 function sendToMaster(payload) {
     if (process.send) {
@@ -815,6 +815,71 @@ async function handleApiCall(msg) {
             case 'exchangeActivityGoods':
                 result = await exchangeShopGoods(args[0] || {});
                 break;
+             case 'getPetShopItems':
+                 result = await getPetShopItems();
+                 break;
+             case 'buyPetShopGoods': {
+                 const [buyGoodsId, buyCount, buyPrice] = args;
+                 result = await buyPetShopGoods(buyGoodsId, buyCount, buyPrice);
+                 break;
+             }
+             case 'feedDog': {
+                 const [feedItemId, feedCount] = args;
+                 result = await feedDog(feedItemId, feedCount);
+                 break;
+             }
+             case 'changeDoghouse': {
+                 const [houseItemId] = args;
+                 result = await changeDoghouse(houseItemId);
+                 break;
+             }
+             case 'getDogStatus':
+                 result = await getDogStatus(args[0] || 0);
+                 break;
+             case 'getDogFoodList':
+                 result = await getDogFoodList();
+                 break;
+             case 'getPetList':
+                 result = await getPetList();
+                 break;
+             case 'deployDog': {
+                 const [deployTypeId] = args;
+                 result = await deployDog(deployTypeId);
+                 break;
+             }
+             case 'recallDog': {
+                 const [recallDogId] = args;
+                 result = await recallDog(recallDogId);
+                 break;
+             }
+             case 'getPetBagInfo':
+                 result = await getPetBagInfo(args[0] || null);
+                 break;
+             case 'getGuardLogs': {
+                 const [guardPage, guardPageSize] = args;
+                 result = await getGuardLogs(guardPage, guardPageSize);
+                 break;
+             }
+             case 'getGuardReward':
+                 result = await getGuardReward();
+                 break;
+             case 'claimGuardReward':
+                 result = await claimGuardReward();
+                 break;
+             case 'getCapitalMode':
+                 result = await getCapitalMode();
+                 break;
+             case 'setCapitalMode': {
+                 const [capitalConfig] = args;
+                 result = await setCapitalMode(capitalConfig);
+                 break;
+             }
+             case 'getIllustratedList':
+                 result = await getIllustratedList(args[0] || false);
+                 break;
+             case 'claimAllIllustratedRewards':
+                 result = await claimAllIllustratedRewards();
+                 break;
             default:
                 error = 'Unknown method';
         }

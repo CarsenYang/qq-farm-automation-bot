@@ -1,4 +1,4 @@
-export interface MenuItem {
+﻿export interface MenuItem  {
 
   path: string
 
@@ -94,6 +94,13 @@ export const menuRoutes: MenuItem[] = [
     activityKey: 'qingNiangEnabled',
   },
 
+  {
+    path: 'pet',
+    name: 'pet',
+    label: '\u5ba0\u7269',
+    icon: 'i-fas-paw',
+    component: () => import('@/views/Pet.vue'),
+  },
   {
 
     path: 'friends',

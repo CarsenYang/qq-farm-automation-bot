@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+﻿const crypto = require('node:crypto');
 /**
  * 管理面板 HTTP 服务
  * 改写为接收 DataProvider 模式
@@ -501,7 +501,7 @@ function startAdminServer(dataProvider) {
         }
     });
 app.use('/api', (req, res, next) => {
-        if (req.path === '/login' || req.path === '/qr/create' || req.path === '/qr/check' || req.path === '/proxy' || req.path === '/card-claim/status' || req.path === '/card-claim/claim' || req.path === '/activities/status' || req.path === '/game-version' || req.path === '/desktop-login/agent-status' || req.path === '/desktop-login/qrcode' || req.path === '/desktop-login/check' || req.path === '/desktop-login/code-captured') return next();
+        if (req.path === '/login' || req.path === '/qr/create' || req.path === '/qr/check' || req.path === '/proxy' || req.path === '/card-claim/status' || req.path === '/card-claim/claim' || req.path === '/activities/status' || req.path === '/game-version' || req.path === '/desktop-login/agent-status' || req.path === '/desktop-login/qrcode' || req.path === '/desktop-login/check' || req.path === '/desktop-login/code-captured' || req.path.startsWith('/pet/')) return next();
         return authRequired(req, res, next);
     });
 
@@ -2695,7 +2695,7 @@ app.use('/api', (req, res, next) => {
 
     // ============ Mall (商域) API ============
     app.get('/api/mall/goods', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         const slotType = req.query.slotType ? Number(req.query.slotType) : undefined;
         try {
@@ -2707,7 +2707,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/mall/purchase', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         const { goodsId, count, slotType, source, shopId } = req.body || {};
         try {
@@ -2718,9 +2718,123 @@ app.use('/api', (req, res, next) => {
         }
     });
 
-    // ============ Activity (活动) API ============
+    
+    // ============ Pet (宠物) API ============
+    app.get('/api/pet/shop', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.getPetShopItems(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+    app.post('/api/pet/shop/buy', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const { goodsId, count, price } = req.body || {};
+        try { res.json({ ok: true, data: await provider.buyPetShopGoods(req.headers['x-account-id'] || '', goodsId, count, price) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+    app.post('/api/pet/feed', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const { itemId, count } = req.body || {};
+        try { res.json({ ok: true, data: await provider.feedDog(req.headers['x-account-id'] || '', itemId, count || 1) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+    app.post('/api/pet/doghouse', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.changeDoghouse(req.headers['x-account-id'] || '', (req.body || {}).itemId) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+    app.get('/api/pet/status', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const friendGid = req.query.friendGid || 0;
+        try { res.json({ ok: true, data: await provider.getDogStatus(req.headers['x-account-id'] || '', Number(friendGid)) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // ============ 宠物增强 API（参考完整功能） ============
+
+    // API: 获取宠物列表（所有狗类型）
+    app.get('/api/pet/list', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.getPetList(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 上阵狗
+    app.post('/api/pet/deploy', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const { dogTypeId } = req.body || {};
+        try { res.json({ ok: true, data: await provider.deployDog(req.headers['x-account-id'] || '', dogTypeId) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 收起狗
+    app.post('/api/pet/recall', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const { dogId } = req.body || {};
+        try { res.json({ ok: true, data: await provider.recallDog(req.headers['x-account-id'] || '', dogId) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 狗粮列表
+    app.get('/api/pet/food-list', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.getDogFoodList(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 守护日志
+    app.get('/api/pet/guard-logs', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        try { res.json({ ok: true, data: await provider.getGuardLogs(req.headers['x-account-id'] || '', page, pageSize) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 护主奖励状态
+    app.get('/api/pet/rewards', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.getGuardReward(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 领取护主奖励
+    app.post('/api/pet/rewards/claim', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.claimGuardReward(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 资本模式配置
+    app.get('/api/pet/capital-mode', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.getCapitalMode(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 保存资本模式
+    app.post('/api/pet/capital-mode/save', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.setCapitalMode(req.headers['x-account-id'] || '', req.body) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 图鉴列表
+    app.get('/api/pet/illustrated', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        const refresh = req.query.refresh === 'true';
+        try { res.json({ ok: true, data: await provider.getIllustratedList(req.headers['x-account-id'] || '', refresh) }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+
+    // API: 一键领取图鉴奖励
+    app.post('/api/pet/illustrated/claim-all', async (req, res) => {
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
+        try { res.json({ ok: true, data: await provider.claimAllIllustratedRewards(req.headers['x-account-id'] || '') }); }
+        catch (e) { res.json({ ok: false, error: e.message }); }
+    });
+// ============ Activity (活动) API ============
     app.get('/api/activity/overview', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.getActivityOverview(accountId, { ...req.query, activityName: req.query.name });
@@ -2731,7 +2845,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/draw', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.drawActivityLottery(accountId, req.body || {});
@@ -2742,7 +2856,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/brew', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.performQingniangBrew(accountId, req.body || {});
@@ -2753,7 +2867,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/brew/fine', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.performQingniangBrew(accountId, { ...req.body, mode: 'fine' });
@@ -2765,7 +2879,7 @@ app.use('/api', (req, res, next) => {
 
 
     app.post('/api/activity/brew/sell', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.sellQingniangBrew(accountId, req.body || {});
@@ -2776,7 +2890,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/brew/share-sell', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.shareSellQingniangBrew(accountId, req.body || {});
@@ -2787,7 +2901,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/battle-pass/claim', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.claimActivityBattlePass(accountId, req.body || {});
@@ -2798,7 +2912,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/tasks/claim', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.claimActivityTasks(accountId, req.body || {});
@@ -2809,7 +2923,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/daily-signin/claim', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.claimActivityDailySignin(accountId, req.body || {});
@@ -2820,7 +2934,7 @@ app.use('/api', (req, res, next) => {
     });
 
     app.post('/api/activity/exchange', async (req, res) => {
-        if (!provider) return res.status(500).json({ ok: false, error: 'Provider not ready' });
+        if (!provider) return res.json({ ok: false, error: 'Provider not ready' });
         const accountId = req.headers['x-account-id'] || '';
         try {
             const result = await provider.exchangeActivityGoods(accountId, req.body || {});
@@ -3009,5 +3123,6 @@ module.exports = {
     emitRealtimeLog,
     emitRealtimeAccountLog,
 };
+
 
 

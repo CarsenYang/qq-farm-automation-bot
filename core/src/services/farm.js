@@ -14,6 +14,7 @@ const { createScheduler } = require('./scheduler');
 const { recordOperation } = require('./stats');
 const { getBagSeeds, getBag, getBagItems, getContainerHoursFromBagItems } = require('./warehouse');
 const { autoBuyFertilizer, checkAndBuyFertilizerBoth } = require('./mall');
+const { getCapitalModeConfig, deployDog, recallDog, DOG_TYPE_NAMES } = require('./pet');
 
 // ============ 内部状态 ============
 let isCheckingFarm = false;
@@ -1601,12 +1602,52 @@ async function runFarmOperation(opType) {
         }
     }
 
+    // 资本模式：检查即将成熟的作物，提前放狗
+    if (opType === 'all' || opType === 'harvest') {
+        try {
+            const capCfg = getCapitalModeConfig();
+            if (capCfg.enabled && capCfg.selectedDogId && capCfg.secondsBeforeMature > 0) {
+                const nowSec = getServerTimeSec();
+                let soonestMature = null;
+                let soonestRemain = 0;
+                for (const land of lands) {
+                    if (!land.plant || !land.plant.phases) continue;
+                    const maturePhase = land.plant.phases.find(function(p) { return toNum(p.phase) === PlantPhase.MATURE; });
+                    if (!maturePhase) continue;
+                    const matureTime = toTimeSec(maturePhase.begin_time);
+                    if (!matureTime || matureTime <= nowSec) continue;
+                    const remainSec = matureTime - nowSec;
+                    if (remainSec > capCfg.secondsBeforeMature) continue;
+                    if (soonestMature === null || remainSec < soonestRemain) {
+                        soonestMature = land;
+                        soonestRemain = remainSec;
+                    }
+                }
+                if (soonestMature) {
+                    log('宠物', '资本模式: 余' + soonestRemain + '秒成熟, 自动上阵 ' + (DOG_TYPE_NAMES[capCfg.selectedDogId] || capCfg.selectedDogId));
+                    await deployDog(capCfg.selectedDogId);
+                }
+            }
+        } catch (e) {
+            log('宠物', '资本模式: 提前放狗失败 ' + (e.message || e));
+        }
+    }
+
     // 执行收获
     let harvestedLandIds = [];
     let harvestReply = null;
     let postHarvest = null;
     if (opType === 'all' || opType === 'harvest') {
         if (status.harvestable.length > 0) {
+            try {
+                const capCfg = getCapitalModeConfig();
+                if (capCfg.enabled && capCfg.selectedDogId) {
+                    log('宠物', '资本模式: 即将收获, 自动上阵 ' + (DOG_TYPE_NAMES[capCfg.selectedDogId] || capCfg.selectedDogId));
+                    await deployDog(capCfg.selectedDogId);
+                }
+            } catch (e) {
+                log('宠物', '资本模式: 上阵失败 ' + (e.message || e));
+            }
             try {
                 harvestReply = await harvest(status.harvestable);
                 log('收获', `收获完成 ${status.harvestable.length} 块土地`, {
@@ -1681,6 +1722,22 @@ async function runFarmOperation(opType) {
                     event: '收获作物',
                     result: 'error',
                 });
+            }
+        }
+    }
+
+    // 资本模式: 收获后收回守护狗
+    if (opType === 'all' || opType === 'harvest') {
+        if (status.harvestable.length > 0) {
+            try {
+                const capCfg = getCapitalModeConfig();
+                if (capCfg.enabled && capCfg.selectedDogId) {
+                    await sleep(5000);
+                    await recallDog(0);
+                    log('宠物', '资本模式: 已收回狗');
+                }
+            } catch (e) {
+                log('宠物', '资本模式: 收狗失败 ' + (e.message || e));
             }
         }
     }

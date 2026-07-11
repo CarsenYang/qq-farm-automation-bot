@@ -21,6 +21,7 @@ async function loadProto() {
         getResourcePath('proto', 'shoppb.proto'),
         getResourcePath('proto', 'friendpb.proto'),
         getResourcePath('proto', 'visitpb.proto'),
+        getResourcePath('proto', 'dogpb.proto'),
         getResourcePath('proto', 'notifypb.proto'),
         getResourcePath('proto', 'taskpb.proto'),
         getResourcePath('proto', 'itempb.proto'),
@@ -137,6 +138,32 @@ async function loadProto() {
     types.VisitEnterReply = root.lookupType('gamepb.visitpb.EnterReply');
     types.VisitLeaveRequest = root.lookupType('gamepb.visitpb.LeaveRequest');
     types.VisitLeaveReply = root.lookupType('gamepb.visitpb.LeaveReply');
+
+    // 狗
+    types.DogInfo = root.lookupType('gamepb.dogpb.DogInfo');
+    types.DogTypeInfo = root.lookupType('gamepb.dogpb.DogTypeInfo');
+    types.DogFoodInfo = root.lookupType('gamepb.dogpb.DogFoodInfo');
+    types.GetPetListRequest = root.lookupType('gamepb.dogpb.GetPetListRequest');
+    types.GetPetListReply = root.lookupType('gamepb.dogpb.GetPetListReply');
+    types.DeployDogRequest = root.lookupType('gamepb.dogpb.DeployDogRequest');
+    types.DeployDogReply = root.lookupType('gamepb.dogpb.DeployDogReply');
+    types.RecallDogRequest = root.lookupType('gamepb.dogpb.RecallDogRequest');
+    types.RecallDogReply = root.lookupType('gamepb.dogpb.RecallDogReply');
+    types.GetDogFoodListRequest = root.lookupType('gamepb.dogpb.GetDogFoodListRequest');
+    types.GetDogFoodListReply = root.lookupType('gamepb.dogpb.GetDogFoodListReply');
+    types.GetGuardLogsRequest = root.lookupType('gamepb.dogpb.GetGuardLogsRequest');
+    types.GetGuardLogsReply = root.lookupType('gamepb.dogpb.GetGuardLogsReply');
+    types.GetGuardRewardRequest = root.lookupType('gamepb.dogpb.GetGuardRewardRequest');
+    types.GetGuardRewardReply = root.lookupType('gamepb.dogpb.GetGuardRewardReply');
+    types.ClaimGuardRewardRequest = root.lookupType('gamepb.dogpb.ClaimGuardRewardRequest');
+    types.ClaimGuardRewardReply = root.lookupType('gamepb.dogpb.ClaimGuardRewardReply');
+    types.CapitalModeConfig = root.lookupType('gamepb.dogpb.CapitalModeConfig');
+    types.GetCapitalModeRequest = root.lookupType('gamepb.dogpb.GetCapitalModeRequest');
+    types.GetCapitalModeReply = root.lookupType('gamepb.dogpb.GetCapitalModeReply');
+    types.SetCapitalModeRequest = root.lookupType('gamepb.dogpb.SetCapitalModeRequest');
+    types.SetCapitalModeReply = root.lookupType('gamepb.dogpb.SetCapitalModeReply');
+    types.FeedDogRequest = root.lookupType('gamepb.dogpb.FeedDogRequest');
+    types.FeedDogReply = root.lookupType('gamepb.dogpb.FeedDogReply');
 
     // 任务
     types.TaskInfoRequest = root.lookupType('gamepb.taskpb.TaskInfoRequest');
