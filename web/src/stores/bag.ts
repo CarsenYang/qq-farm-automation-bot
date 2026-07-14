@@ -15,7 +15,11 @@ export const useBagStore = defineStore('bag', () => {
 
   const items = computed(() => {
     const hiddenIds = new Set([1, 1001, 1002, 1101, 1011, 1012, 3001, 3002])
-    return allItems.value.filter((it: any) => !hiddenIds.has(Number(it.id || 0)))
+    const hiddenTypes = new Set([18])
+    return allItems.value.filter((it: any) =>
+      !hiddenIds.has(Number(it.id || 0))
+      && !hiddenTypes.has(Number(it.itemType || 0)),
+    )
   })
 
   const dashboardItems = computed(() => {

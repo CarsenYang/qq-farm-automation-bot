@@ -512,6 +512,9 @@ async function sellAllFruits() {
         for (const item of items) {
             const id = toNum(item.id);
             const count = toNum(item.count);
+            const itemInfo = getItemById(id);
+            const itemType = itemInfo ? (Number(itemInfo.type) || 0) : 0;
+            if (itemType !== 6 && itemType !== 17) continue;
             // Skip decorative/quality mutant items (月华/塔塔/荷华/黄金) - keep in bag
             var hasQualityMutant = false;
             if (item.mutant_types && item.mutant_types.length > 0) {
